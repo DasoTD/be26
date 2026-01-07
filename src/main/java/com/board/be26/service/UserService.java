@@ -18,6 +18,9 @@ public class UserService implements UserDetailsService {
     private BCryptPasswordEncoder encoder;
 
     public User register(User user) {        
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

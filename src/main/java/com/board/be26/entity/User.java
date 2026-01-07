@@ -4,13 +4,18 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "uk_users_username", columnList = "username", unique = true),
+    @Index(name = "uk_users_email", columnList = "email", unique = true)
+})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, unique = true)
     private String username;
     private String password;  // Hashed
+    @Column(nullable = false, unique = true)
     private String email;
     private BigDecimal balance = BigDecimal.ZERO;
     private String stripeCustomerId;  // Optional for Stripe

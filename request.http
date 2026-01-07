@@ -1,3 +1,6 @@
+@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZSIsImlhdCI6MTc2Nzc2ODY5NCwiZXhwIjoxNzY3ODU1MDk0fQ.uqEjnyZl9hgiSpvh-l7AgHsyM6uC2GkNA5i2fXnN3hw3kL62e01yCInou57LVoD-
+
+
 POST http://localhost:8080/api/auth/register
 Content-Type: application/json
 
