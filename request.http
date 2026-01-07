@@ -24,3 +24,48 @@ Content-Type: application/json
 # ✅ Disables CORS restrictions
 # ✅ Permits all requests to auth endpoints
 # ✅ Permits all other requests as wel
+
+###
+
+# Create a product (requires auth if you secure products)
+POST http://localhost:8080/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Sample Item",
+    "description": "A thing to buy",
+    "price": 19.99,
+    "stock": 50
+}
+
+###
+
+# Create an order (authenticated, owner-only)
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "userId": 1,
+    "productId": 1,
+    "quantity": 2
+}
+
+###
+
+# Get my orders (uses authenticated principal)
+GET http://localhost:8080/api/orders
+Authorization: Bearer {{token}}
+
+###
+
+# Get a single order by id (enforces ownership)
+GET http://localhost:8080/api/orders/1
+Authorization: Bearer {{token}}
+
+###
+
+# Get orders for a user (enforces ownership)
+GET http://localhost:8080/api/orders/user/1
+Authorization: Bearer {{token}}

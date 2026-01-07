@@ -1,9 +1,26 @@
 package com.board.be26.dto;
 
+import java.math.BigDecimal;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.PositiveOrZero;
+
 public class CreateProductRequest {
+    @NotBlank
+    @Size(max = 255)
     private String name;
+
+    @Size(max = 1024)
     private String description;
-    private double price;
+
+    @NotNull
+    @Positive
+    private BigDecimal price;
+
+    @PositiveOrZero
     private int stock;
 
     public String getDescription() {
@@ -12,10 +29,10 @@ public class CreateProductRequest {
     public void setDescription(String description) {
         this.description = description;
     }
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
-    public void setPrice(double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
     public int getStock() {

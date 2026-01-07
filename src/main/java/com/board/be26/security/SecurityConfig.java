@@ -27,6 +27,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/auth/register", "/auth/login", "/auth/userDetails").permitAll()
+                .requestMatchers("/orders/**").authenticated()
+                .requestMatchers("/products/**").authenticated()
                 .anyRequest().permitAll()
             );
         
