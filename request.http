@@ -1,5 +1,4 @@
-@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZSIsImlhdCI6MTc2Nzc2ODY5NCwiZXhwIjoxNzY3ODU1MDk0fQ.uqEjnyZl9hgiSpvh-l7AgHsyM6uC2GkNA5i2fXnN3hw3kL62e01yCInou57LVoD-
-
+@token=
 
 POST http://localhost:8080/api/auth/register
 Content-Type: application/json
@@ -72,3 +71,4 @@ Authorization: Bearer {{token}}
 # Get orders for a user (enforces ownership)
 GET http://localhost:8080/api/orders/user/1
 Authorization: Bearer {{token}}
+
