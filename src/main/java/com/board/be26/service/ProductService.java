@@ -2,7 +2,6 @@ package com.board.be26.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -11,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,28 +64,10 @@ public class ProductService {
         return productRepository.findById(id).map(this::toResponse).orElse(null);
     }
 
-    public PageImpl<ProductResponse> searchProducts(String nameContains, String category, ProductStatus status, int page, int size, String sortBy, Sort.Direction direction) {
+    public Page<ProductResponse> searchProducts(String nameContains, String category, ProductStatus status, int page, int size, String sortBy, Sort.Direction direction) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        Page<Product> pageResult = status != null
-                ? productRepository.findByStatus(status, pageable)
-                : productRepository.findAll(pageable);
-
-        List<ProductResponse> filtered = pageResult.stream()
-                .map(this::toResponse)
-                .filter(resp -> matchesFilter(resp, nameContains, category))
-                .toList();
-
-        return new PageImpl<>(filtered, pageable, filtered.size());
-    }
-
-    private boolean matchesFilter(ProductResponse resp, String nameContains, String category) {
-        if (nameContains != null && !resp.getName().toLowerCase().contains(nameContains.toLowerCase())) {
-            return false;
-        }
-        if (category != null && (resp.getCategory() == null || !resp.getCategory().equalsIgnoreCase(category))) {
-            return false;
-        }
-        return true;
+        Page<Product> pageResult = productRepository.search(status, category, nameContains, pageable);
+        return pageResult.map(this::toResponse);
     }
 
     @Transactional

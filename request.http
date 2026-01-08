@@ -29,16 +29,18 @@ Content-Type: application/json
 
 ###
 
-# Create a product (requires auth if you secure products)
+# Create a product (requires ADMIN role; set @token from login of an admin user)
 POST http://localhost:8080/api/products
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
+    "sku": "SKU-001",
     "name": "Sample Item",
     "description": "A thing to buy",
     "price": 19.99,
     "stock": 50
+    "category": "general"
 }
 
 ###

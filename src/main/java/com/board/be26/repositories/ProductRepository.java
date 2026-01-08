@@ -17,7 +17,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findBySku(String sku);
 
-    Page<Product> findAll(Pageable pageable);
-
-    Page<Product> findByStatus(ProductStatus status, Pageable pageable);
+    @Query("SELECT p FROM Product p WHERE (:status IS NULL OR p.status = :status) " +
+           "AND (:category IS NULL OR LOWER(p.category) = LOWER(:category)) " +
+           "AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))")
+    Page<Product> search(ProductStatus status, String category, String name, Pageable pageable);
 }

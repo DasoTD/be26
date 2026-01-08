@@ -21,9 +21,8 @@ public class UserService implements UserDetailsService {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
-        if (user.getRoles() == null || user.getRoles().isBlank()) {
-            user.setRoles("ROLE_USER");
-        }
+        // Force self-registrations to basic user role; elevate via admin/DB only.
+        user.setRoles("ROLE_USER");
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

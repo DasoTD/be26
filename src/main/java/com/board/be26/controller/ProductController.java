@@ -1,6 +1,6 @@
 package com.board.be26.controller;
 
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,7 +38,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<PageImpl<ProductResponse>> getAllProducts(
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "createdAt") String sort,
@@ -47,7 +47,7 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) ProductStatus status) {
 
-        PageImpl<ProductResponse> products = productService.searchProducts(name, category, status, page, size, sort, direction);
+        Page<ProductResponse> products = productService.searchProducts(name, category, status, page, size, sort, direction);
         return ResponseEntity.ok(products);
     }
 
