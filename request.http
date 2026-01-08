@@ -45,6 +45,20 @@ Authorization: Bearer {{token}}
 
 ###
 
+# Pay for an order (user must own the order)
+POST http://localhost:8080/api/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "orderId": 1,
+    "paymentMethod": "CARD",
+    "providerReference": "demo-ref-123",
+    "currency": "USD"
+}
+
+###
+
 # Create an order (authenticated, owner-only)
 POST http://localhost:8080/api/orders
 Content-Type: application/json
