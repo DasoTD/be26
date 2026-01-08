@@ -1,75 +1,146 @@
 package com.board.be26.service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.board.be26.dto.CreateProductRequest;
+import com.board.be26.dto.ProductResponse;
+import com.board.be26.dto.UpdateProductRequest;
 import com.board.be26.entity.Product;
+import com.board.be26.entity.ProductStatus;
 import com.board.be26.repositories.ProductRepository;
 
 @Service
 public class ProductService {
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
-    public void someProductServiceMethod() {
-        logger.info("Executing some product service method.");
-        // Business logic here
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
-    public ProductRepository getProductRepository() {
-        return productRepository;
-    }
-
-    public Product createProduct(CreateProductRequest product) {
+    @Transactional
+    public ProductResponse createProduct(CreateProductRequest product) {
         logger.info("Creating a new product: {}", product.getName());
+
+        productRepository.findBySku(product.getSku())
+                .ifPresent(p -> { throw new IllegalArgumentException("SKU already exists"); });
+
         Product newProduct = new Product();
+        newProduct.setSku(product.getSku());
         newProduct.setName(product.getName());
         newProduct.setDescription(product.getDescription());
-        newProduct.setPrice(product.getPrice());
+        newProduct.setPrice(product.getPrice().setScale(2, RoundingMode.HALF_UP));
         newProduct.setStock(product.getStock());
-        return productRepository.save(newProduct);
+        newProduct.setCategory(product.getCategory());
+        newProduct.setStatus(ProductStatus.ACTIVE);
+
+        Product saved = productRepository.save(newProduct);
+        return toResponse(saved);
     }
 
-    public Product getProductByName(String name) {
+    public Optional<Product> findEntityById(Long id) {
+        return productRepository.findById(id);
+    }
+
+    public ProductResponse getProductByName(String name) {
         logger.info("Fetching product by name: {}", name);
-        return productRepository.findByName(name)
-                .orElse(null);
+        return productRepository.findByName(name).map(this::toResponse).orElse(null);
     }
 
-    public Product getProductById(Long id) {
+    public ProductResponse getProductById(Long id) {
         logger.info("Fetching product by ID: {}", id);
-        return productRepository.findById(id).orElse(null);
+        return productRepository.findById(id).map(this::toResponse).orElse(null);
     }
 
-    public Iterable<Product> getAllProducts() {
-        logger.info("Fetching all products.");
-        return productRepository.findAll();
+    public PageImpl<ProductResponse> searchProducts(String nameContains, String category, ProductStatus status, int page, int size, String sortBy, Sort.Direction direction) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<Product> pageResult = status != null
+                ? productRepository.findByStatus(status, pageable)
+                : productRepository.findAll(pageable);
+
+        List<ProductResponse> filtered = pageResult.stream()
+                .map(this::toResponse)
+                .filter(resp -> matchesFilter(resp, nameContains, category))
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
 
-    public void updateProductStock(String name, int newStock) {
-        logger.info("Updating stock for product: {} to {}", name, newStock);
-        Product product = getProductByName(name);
-        if (product != null) {
-            product.setStock(newStock);
-            productRepository.save(product);
-        } else {
-            logger.warn("Product with name: {} not found.", name);
+    private boolean matchesFilter(ProductResponse resp, String nameContains, String category) {
+        if (nameContains != null && !resp.getName().toLowerCase().contains(nameContains.toLowerCase())) {
+            return false;
         }
-    }
-
-    public void deleteProductByName(String name) {
-        logger.info("Deleting product by name: {}", name);
-        Product product = getProductByName(name);
-        if (product != null) {
-            productRepository.delete(product);
-        } else {
-            logger.warn("Product with name: {} not found.", name);
+        if (category != null && (resp.getCategory() == null || !resp.getCategory().equalsIgnoreCase(category))) {
+            return false;
         }
+        return true;
     }
 
-    
+    @Transactional
+    public ProductResponse updateProduct(Long id, UpdateProductRequest request) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        if (request.getSku() != null) {
+            productRepository.findBySku(request.getSku())
+                    .filter(p -> !p.getId().equals(id))
+                    .ifPresent(p -> { throw new IllegalArgumentException("SKU already exists"); });
+            product.setSku(request.getSku());
+        }
+        if (request.getName() != null) {
+            product.setName(request.getName());
+        }
+        if (request.getDescription() != null) {
+            product.setDescription(request.getDescription());
+        }
+        if (request.getPrice() != null) {
+            product.setPrice(request.getPrice().setScale(2, RoundingMode.HALF_UP));
+        }
+        if (request.getStock() != null) {
+            product.setStock(request.getStock());
+        }
+        if (request.getCategory() != null) {
+            product.setCategory(request.getCategory());
+        }
+        if (request.getStatus() != null) {
+            product.setStatus(request.getStatus());
+        }
+
+        return toResponse(productRepository.save(product));
+    }
+
+    @Transactional
+    public void archiveProduct(Long id) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        product.setStatus(ProductStatus.ARCHIVED);
+        productRepository.save(product);
+    }
+
+    private ProductResponse toResponse(Product product) {
+        ProductResponse resp = new ProductResponse();
+        resp.setId(product.getId());
+        resp.setSku(product.getSku());
+        resp.setName(product.getName());
+        resp.setDescription(product.getDescription());
+        resp.setPrice(product.getPrice());
+        resp.setStock(product.getStock());
+        resp.setCategory(product.getCategory());
+        resp.setStatus(product.getStatus());
+        resp.setCreatedAt(product.getCreatedAt());
+        resp.setUpdatedAt(product.getUpdatedAt());
+        return resp;
+    }
 }

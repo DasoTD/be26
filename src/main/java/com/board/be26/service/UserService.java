@@ -21,6 +21,9 @@ public class UserService implements UserDetailsService {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
+        if (user.getRoles() == null || user.getRoles().isBlank()) {
+            user.setRoles("ROLE_USER");
+        }
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
@@ -33,10 +36,10 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = findByUsername(username);
         if (user == null) throw new UsernameNotFoundException("User not found");
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .roles("USER")
-                .build();
+        String[] roles = user.getRoles() != null ? user.getRoles().split(",") : new String[] {"ROLE_USER"};
+        return org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
+            .password(user.getPassword())
+            .authorities(roles)
+            .build();
     }
 }

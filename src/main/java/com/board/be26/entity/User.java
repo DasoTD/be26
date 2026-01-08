@@ -17,6 +17,8 @@ public class User {
     private String password;  // Hashed
     @Column(nullable = false, unique = true)
     private String email;
+    @Column(nullable = false)
+    private String roles = "ROLE_USER";
     private BigDecimal balance = BigDecimal.ZERO;
     private String stripeCustomerId;  // Optional for Stripe
     private String stripeBankAccountId;  // For payouts
@@ -75,5 +77,13 @@ public class User {
 
     public void setStripeBankAccountId(String stripeBankAccountId) {
         this.stripeBankAccountId = stripeBankAccountId;
+    }
+
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
     }
 }
