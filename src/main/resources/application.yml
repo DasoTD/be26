@@ -1,29 +1,27 @@
 server:
-  port: 8080
+  port: ${APP_PORT:8080}
   servlet:
-    context-path: /api
+    context-path: ${APP_CONTEXT_PATH:/api}
     
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: be26
   datasource:
-    url: jdbc:h2:mem:be26db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    # DB_CLOSE_DELAY=-1;
-    # DB_CLOSE_ON_EXIT=FALSE
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/be26db}
+    driverClassName: ${DB_DRIVER:org.postgresql.Driver}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: ${DB_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
     hibernate:
       ddl-auto: update
-  h2:
-    console:
-      enabled: true
+    show-sql: false
 
 jwt:
-  secret: 6f61d7eab8c04c5c93d8e6f7d4b0a1c2f3e4d5c6b7a8091f2e3d4c5b6a7f8e9
-  expiration: 86400000  # 1 day in ms
+  secret: ${JWT_SECRET:6f61d7eab8c04c5c93d8e6f7d4b0a1c2f3e4d5c6b7a8091f2e3d4c5b6a7f8e9}
+  expiration: ${JWT_EXPIRATION:86400000}  # 1 day in ms
 
 logging:
   level:
