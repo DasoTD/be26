@@ -1,18 +1,18 @@
 @token=
 
-POST http://localhost:8080/api/auth/register
+POST http://localhost:8081/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "john_doe",
+    "username": "john_doe1",
     "password": "securePassword123",
-    "email": "john@example.com",
-    "balance": 0
+    "email": "john1@example.com",
+    "balance": 100.00
 }
 
 ###
 
-POST http://localhost:8080/api/auth/login
+POST http://localhost:8081/api/auth/login
 Content-Type: application/json
 
 {
@@ -30,7 +30,7 @@ Content-Type: application/json
 ###
 
 # Create a product (requires ADMIN role; set @token from login of an admin user)
-POST http://localhost:8080/api/products
+POST http://localhost:8081/api/products
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -39,14 +39,28 @@ Authorization: Bearer {{token}}
     "name": "Sample Item",
     "description": "A thing to buy",
     "price": 19.99,
-    "stock": 50
+    "stock": 50,
     "category": "general"
 }
 
 ###
 
+# Pay for an order (user must own the order)
+POST http://localhost:8081/api/payments
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "orderId": 2,
+    "paymentMethod": "CARD",
+    "providerReference": "demo-ref-123",
+    "currency": "USD"
+}
+
+###
+
 # Create an order (authenticated, owner-only)
-POST http://localhost:8080/api/orders
+POST http://localhost:8081/api/orders
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -59,18 +73,18 @@ Authorization: Bearer {{token}}
 ###
 
 # Get my orders (uses authenticated principal)
-GET http://localhost:8080/api/orders
+GET http://localhost:8081/api/orders
 Authorization: Bearer {{token}}
 
 ###
 
 # Get a single order by id (enforces ownership)
-GET http://localhost:8080/api/orders/1
+GET http://localhost:8081/api/orders/1
 Authorization: Bearer {{token}}
 
 ###
 
 # Get orders for a user (enforces ownership)
-GET http://localhost:8080/api/orders/user/1
+GET http://localhost:8081/api/orders/user/1
 Authorization: Bearer {{token}}
 

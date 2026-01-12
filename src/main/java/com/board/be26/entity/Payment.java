@@ -7,44 +7,45 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
-@Table(name = "products")
+@Table(name = "payments")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class Product {
+public class Payment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 64)
-    private String sku;
-
-    @Column(nullable = false, length = 255)
-    private String name;
-
-    @Column(length = 1024)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @Column(precision = 12, scale = 2, nullable = false)
-    private BigDecimal price;
+    private BigDecimal amount;
 
-    @Column(nullable = false)
-    private int stock;
-
-    @Column(length = 255)
-    private String category;
+    @Column(length = 8, nullable = false)
+    private String currency = "USD";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    private ProductStatus status = ProductStatus.ACTIVE;
+    private PaymentStatus status = PaymentStatus.INITIATED;
+
+    @Column(length = 64)
+    private String paymentMethod;
+
+    @Column(length = 128)
+    private String providerReference;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -52,17 +53,10 @@ public class Product {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Version
-    private Long version;
-
-    // Getters/Setters
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
         updatedAt = createdAt;
-        if (status == null) {
-            status = ProductStatus.ACTIVE;
-        }
     }
 
     @PreUpdate
@@ -73,56 +67,57 @@ public class Product {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public BigDecimal getPrice() {
-        return price;
-    }
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-    public int getStock() {
-        return stock;
-    }
-    public void setStock(int stock) {
-        this.stock = stock;
+
+    public Order getOrder() {
+        return order;
     }
 
-    public String getSku() {
-        return sku;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
-    public void setSku(String sku) {
-        this.sku = sku;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public String getCategory() {
-        return category;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public String getCurrency() {
+        return currency;
     }
 
-    public ProductStatus getStatus() {
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public PaymentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(ProductStatus status) {
+    public void setStatus(PaymentStatus status) {
         this.status = status;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getProviderReference() {
+        return providerReference;
+    }
+
+    public void setProviderReference(String providerReference) {
+        this.providerReference = providerReference;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -140,14 +135,4 @@ public class Product {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    
 }

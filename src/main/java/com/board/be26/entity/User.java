@@ -1,6 +1,8 @@
 package com.board.be26.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
 @Entity
@@ -8,19 +10,23 @@ import java.math.BigDecimal;
     @Index(name = "uk_users_username", columnList = "username", unique = true),
     @Index(name = "uk_users_email", columnList = "email", unique = true)
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false, unique = true)
     private String username;
+    @JsonIgnore
     private String password;  // Hashed
     @Column(nullable = false, unique = true)
     private String email;
     @Column(nullable = false)
     private String roles = "ROLE_USER";
     private BigDecimal balance = BigDecimal.ZERO;
+    @JsonIgnore
     private String stripeCustomerId;  // Optional for Stripe
+    @JsonIgnore
     private String stripeBankAccountId;  // For payouts
 
     public Long getId() {
