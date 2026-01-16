@@ -1,4 +1,4 @@
-@token=
+@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZTg3IiwiaWF0IjoxNzY4NTQ0MTM3LCJleHAiOjE3Njg2MzA1Mzd9.GIVUirgQOuldd1FC-7SxEmf4QtcGSd9yr2xOd0mkhovHXOxrRyuYXQEPkbTHuEfo
 
 POST http://localhost:8081/api/auth/register
 Content-Type: application/json
@@ -35,7 +35,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "sku": "SKU-001",
+    "sku": "SKU-002",
     "name": "Sample Item",
     "description": "A thing to buy",
     "price": 19.99,
@@ -65,7 +65,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "userId": 1,
+    "userId": 8,
     "productId": 1,
     "quantity": 2
 }

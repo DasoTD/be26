@@ -40,8 +40,11 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders(Principal principal) {
-        // Basic safeguard: only authenticated users can view their own orders. For full admin support, add roles later.
         User user = requirePrincipalUser(principal);
+        // Admin can view all orders; regular users see only their own
+        if (user.getRoles().contains("ROLE_ADMIN")) {
+            return ResponseEntity.ok(orderService.getAllOrders());
+        }
         return ResponseEntity.ok(orderService.getOrdersForUser(user.getId()));
     }
 
