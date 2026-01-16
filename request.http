@@ -4,9 +4,9 @@ POST http://localhost:8081/api/auth/register
 Content-Type: application/json
 
 {
-    "username": "john_doe1",
-    "password": "securePassword123",
-    "email": "john1@example.com",
+    "username": "john_doe87",
+    "password": "securePassword87",
+    "email": "john87@example.com",
     "balance": 100.00
 }
 
@@ -16,8 +16,8 @@ POST http://localhost:8081/api/auth/login
 Content-Type: application/json
 
 {
-    "username": "john_doe",
-    "password": "securePassword123"
+    "username": "john_doe87",
+    "password": "securePassword87"
 }
 
 

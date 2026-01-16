@@ -2,6 +2,7 @@ package com.board.be26.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 
@@ -17,7 +18,7 @@ public class User {
     private Long id;
     @Column(nullable = false, unique = true)
     private String username;
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;  // Hashed
     @Column(nullable = false, unique = true)
     private String email;
