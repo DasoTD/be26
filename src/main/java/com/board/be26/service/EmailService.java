@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.board.be26.entity.Order;
@@ -22,6 +23,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    @Async
     public void sendOrderConfirmation(Order order) {
         try {
             User user = order.getUser();
