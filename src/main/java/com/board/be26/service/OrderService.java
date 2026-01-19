@@ -24,11 +24,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, EmailService emailService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -55,6 +57,10 @@ public class OrderService {
 
         Order saved = orderRepository.save(order);
         logger.info("Created order {} for user {} and product {}", saved.getId(), user.getId(), product.getId());
+        
+        // Send order confirmation email asynchronously
+        emailService.sendOrderConfirmation(saved);
+        
         return saved;
     }
 
