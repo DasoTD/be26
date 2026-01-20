@@ -1,4 +1,4 @@
-@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZTg3IiwiaWF0IjoxNzY4NTQ0MTM3LCJleHAiOjE3Njg2MzA1Mzd9.GIVUirgQOuldd1FC-7SxEmf4QtcGSd9yr2xOd0mkhovHXOxrRyuYXQEPkbTHuEfo
+@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZTg3IiwiaWF0IjoxNzY4ODYzNTQ4LCJleHAiOjE3Njg5NDk5NDh9.62Hh9EZYt45XBv_egA6S9xsSmx-4ERbu6klPSj7Lp6oocOfUflwTFx_ZeOTkbL4i
 
 POST http://localhost:8081/api/auth/register
 Content-Type: application/json
