@@ -13,6 +13,7 @@ import com.board.be26.entity.Order;
 import com.board.be26.entity.OrderStatus;
 import com.board.be26.entity.Product;
 import com.board.be26.entity.User;
+import com.board.be26.event.OrderCreatedEvent;
 import com.board.be26.repositories.OrderRepository;
 import com.board.be26.repositories.ProductRepository;
 import com.board.be26.repositories.UserRepository;
@@ -24,13 +25,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final EmailService emailService;
+    private final OrderEventPublisher eventPublisher;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, EmailService emailService) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, 
+                       ProductRepository productRepository, OrderEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
-        this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -58,8 +60,20 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         logger.info("Created order {} for user {} and product {}", saved.getId(), user.getId(), product.getId());
         
-        // Send order confirmation email asynchronously
-        emailService.sendOrderConfirmation(saved);
+        // Publish order created event to RabbitMQ queue
+        OrderCreatedEvent event = new OrderCreatedEvent(
+            saved.getId(),
+            user.getId(),
+            user.getEmail(),
+            user.getUsername(),
+            product.getName(),
+            request.getQuantity(),
+            product.getPrice(),
+            saved.getTotalPrice(),
+            saved.getStatus().toString(),
+            System.currentTimeMillis()
+        );
+        eventPublisher.publishOrderCreatedEvent(event);
         
         return saved;
     }
