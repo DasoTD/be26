@@ -1,7 +1,10 @@
 package com.board.be26.service;
 
 import java.math.RoundingMode;
+import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,18 +18,24 @@ import com.board.be26.entity.User;
 import com.board.be26.repositories.OrderRepository;
 import com.board.be26.repositories.PaymentRepository;
 import com.board.be26.repositories.UserRepository;
+import com.board.be26.dto.PaystackInitializeResponse;
+import com.board.be26.dto.PaystackVerifyResponse;
 
 @Service
 public class PaymentService {
+    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final PaystackService paystackService;
 
-    public PaymentService(PaymentRepository paymentRepository, OrderRepository orderRepository, UserRepository userRepository) {
+    public PaymentService(PaymentRepository paymentRepository, OrderRepository orderRepository, 
+                         UserRepository userRepository, PaystackService paystackService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
+        this.paystackService = paystackService;
     }
 
     @Transactional
@@ -83,5 +92,90 @@ public class PaymentService {
         resp.setCreatedAt(payment.getCreatedAt());
         resp.setUpdatedAt(payment.getUpdatedAt());
         return resp;
+    }
+    
+    // ========== PAYSTACK INTEGRATION ==========
+    
+    /**
+     * Initialize payment for an order via Paystack
+     */
+    @Transactional
+    public PaystackInitializeResponse initializePaymentPaystack(Long orderId) {
+        try {
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+            
+            String reference = "ORD-" + orderId + "-" + UUID.randomUUID().toString().substring(0, 8);
+            
+            PaystackInitializeResponse response = paystackService.initializeTransaction(
+                order.getUser().getEmail(),
+                order.getTotalPrice(),
+                reference
+            );
+            
+            if (response != null && response.isStatus()) {
+                Payment payment = new Payment();
+                payment.setOrder(order);
+                payment.setAmount(order.getTotalPrice());
+                payment.setProviderReference(reference);
+                payment.setStatus(PaymentStatus.INITIATED);
+                payment.setPaymentMethod("paystack");
+                paymentRepository.save(payment);
+                
+                logger.info("Payment initialized for order {}: {}", orderId, reference);
+            }
+            
+            return response;
+        } catch (Exception e) {
+            logger.error("Error initializing payment for order {}", orderId, e);
+            throw new RuntimeException("Failed to initialize payment", e);
+        }
+    }
+    
+    /**
+     * Verify payment and update order status
+     */
+    @Transactional
+    public boolean verifyPaymentPaystack(String reference) {
+        try {
+            Payment payment = paymentRepository.findByProviderReference(reference)
+                    .orElseThrow(() -> new IllegalArgumentException("Payment not found: " + reference));
+            
+            PaystackVerifyResponse response = paystackService.verifyTransaction(reference);
+            
+            if (response != null && response.isStatus()) {
+                String status = response.getData().getStatus();
+                
+                if ("success".equalsIgnoreCase(status)) {
+                    payment.setStatus(PaymentStatus.SUCCEEDED);
+                    paymentRepository.save(payment);
+                    
+                    Order order = payment.getOrder();
+                    order.setStatus(OrderStatus.PAID);
+                    orderRepository.save(order);
+                    
+                    logger.info("Payment verified and completed for order {}", order.getId());
+                    return true;
+                } else if ("abandoned".equalsIgnoreCase(status) || "failed".equalsIgnoreCase(status)) {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(payment);
+                    logger.warn("Payment failed for reference {}", reference);
+                    return false;
+                }
+            }
+            
+            return false;
+        } catch (Exception e) {
+            logger.error("Error verifying payment for reference {}", reference, e);
+            throw new RuntimeException("Failed to verify payment", e);
+        }
+    }
+    
+    /**
+     * Get payment by reference
+     */
+    public Payment getPaymentByReference(String reference) {
+        return paymentRepository.findByProviderReference(reference)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found: " + reference));
     }
 }

@@ -58,6 +58,10 @@ stripe:
   publishable-key: pk_test_YourPublishableKeyHere
   webhook-secret: whsec_YourWebhookSecretHere
 
+paystack:
+  secret-key: ${PAYSTACK_SECRET_KEY:sk_test_your_paystack_key}
+  public-key: ${PAYSTACK_PUBLIC_KEY:pk_test_your_paystack_key}
+
 security:
   ip-whitelist:
     enabled: true
