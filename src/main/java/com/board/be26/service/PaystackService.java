@@ -12,9 +12,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.board.be26.dto.PaystackInitializeResponse;
 import com.board.be26.dto.PaystackVerifyResponse;
+import com.board.be26.service.payment.PaymentProvider;
 
 @Service
-public class PaystackService {
+public class PaystackService implements PaymentProvider {
     private static final Logger logger = LoggerFactory.getLogger(PaystackService.class);
     
     @Value("${paystack.secret-key}")
@@ -29,7 +30,8 @@ public class PaystackService {
     /**
      * Initialize a Paystack transaction
      */
-    public PaystackInitializeResponse initializeTransaction(String email, BigDecimal amount, 
+    @Override
+    public Object initializeTransaction(String email, BigDecimal amount, 
                                                             String reference) {
         try {
             String amountInKobo = amount.multiply(BigDecimal.valueOf(100)).toPlainString();
@@ -66,7 +68,8 @@ public class PaystackService {
     /**
      * Verify a Paystack transaction
      */
-    public PaystackVerifyResponse verifyTransaction(String reference) {
+    @Override
+    public Object verifyTransaction(String reference) {
         try {
             logger.info("Verifying Paystack transaction: {}", reference);
             
@@ -89,5 +92,10 @@ public class PaystackService {
             logger.error("Error verifying Paystack transaction", e);
             throw new RuntimeException("Failed to verify payment", e);
         }
+    }
+    
+    @Override
+    public String getProviderName() {
+        return "paystack";
     }
 }

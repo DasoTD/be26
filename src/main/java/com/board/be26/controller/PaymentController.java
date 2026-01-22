@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.board.be26.dto.PaymentRequest;
 import com.board.be26.dto.PaymentResponse;
-import com.board.be26.dto.PaystackInitializeResponse;
 import com.board.be26.entity.Payment;
 import com.board.be26.service.PaymentService;
 
@@ -44,24 +43,24 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
     
-    // ========== PAYSTACK INTEGRATION ==========
+    // ========== PAYMENT PROVIDER INTEGRATION (Provider-Agnostic) ==========
     
     /**
-     * Initialize Paystack payment for an order
+     * Initialize payment for an order (works with any configured provider)
      */
-    @PostMapping("/paystack/initialize/{orderId}")
-    public ResponseEntity<PaystackInitializeResponse> initializePaystackPayment(
+    @PostMapping("/initialize/{orderId}")
+    public ResponseEntity<Object> initializePayment(
             @PathVariable Long orderId, 
             Principal principal) {
-        PaystackInitializeResponse response = paymentService.initializePaymentPaystack(orderId);
+        Object response = paymentService.initializePaymentPaystack(orderId);
         return ResponseEntity.status(201).body(response);
     }
     
     /**
-     * Verify Paystack payment
+     * Verify payment (works with any configured provider)
      */
-    @PostMapping("/paystack/verify")
-    public ResponseEntity<Object> verifyPaystackPayment(@RequestParam String reference) {
+    @PostMapping("/verify")
+    public ResponseEntity<Object> verifyPayment(@RequestParam String reference) {
         try {
             boolean verified = paymentService.verifyPaymentPaystack(reference);
             if (verified) {
@@ -81,6 +80,37 @@ public class PaymentController {
     public ResponseEntity<Payment> getPaymentByReference(@PathVariable String reference) {
         Payment payment = paymentService.getPaymentByReference(reference);
         return ResponseEntity.ok(payment);
+    }
+    
+    // Legacy endpoints for backward compatibility
+    /**
+     * @deprecated Use POST /payments/initialize/{orderId} instead
+     */
+    @PostMapping("/paystack/initialize/{orderId}")
+    @Deprecated(forRemoval = true)
+    public ResponseEntity<Object> initializePaystackPayment(
+            @PathVariable Long orderId, 
+            Principal principal) {
+        Object response = paymentService.initializePaymentPaystack(orderId);
+        return ResponseEntity.status(201).body(response);
+    }
+    
+    /**
+     * @deprecated Use POST /payments/verify instead
+     */
+    @PostMapping("/paystack/verify")
+    @Deprecated(forRemoval = true)
+    public ResponseEntity<Object> verifyPaystackPayment(@RequestParam String reference) {
+        try {
+            boolean verified = paymentService.verifyPaymentPaystack(reference);
+            if (verified) {
+                return ResponseEntity.ok(new PaymentStatusResponse(true, "Payment verified and completed"));
+            } else {
+                return ResponseEntity.ok(new PaymentStatusResponse(false, "Payment verification failed"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new PaymentStatusResponse(false, e.getMessage()));
+        }
     }
     
     // Response wrapper class
