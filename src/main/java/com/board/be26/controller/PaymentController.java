@@ -13,8 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.board.be26.dto.PaymentRequest;
 import com.board.be26.dto.PaymentResponse;
+import com.board.be26.entity.Order;
 import com.board.be26.entity.Payment;
+import com.board.be26.repositories.OrderRepository;
 import com.board.be26.service.PaymentService;
+import com.board.be26.service.ai.FraudDetectionService;
+import com.board.be26.service.ai.FraudDetectionService.FraudAnalysisResult;
+import com.board.be26.service.ai.PaymentRecommendationService;
+import com.board.be26.service.ai.PaymentRecommendationService.PaymentRecommendation;
 
 import jakarta.validation.Valid;
 
@@ -23,9 +29,18 @@ import jakarta.validation.Valid;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final FraudDetectionService fraudDetectionService;
+    private final PaymentRecommendationService paymentRecommendationService;
+    private final OrderRepository orderRepository;
 
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService, 
+                           FraudDetectionService fraudDetectionService,
+                           PaymentRecommendationService paymentRecommendationService,
+                           OrderRepository orderRepository) {
         this.paymentService = paymentService;
+        this.fraudDetectionService = fraudDetectionService;
+        this.paymentRecommendationService = paymentRecommendationService;
+        this.orderRepository = orderRepository;
     }
 
     @PostMapping
@@ -41,6 +56,32 @@ public class PaymentController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(response);
+    }
+    
+    // ========== AI-POWERED PAYMENT SERVICES ==========
+    
+    /**
+     * Analyze payment for fraud risk using AI
+     */
+    @GetMapping("/fraud-analysis/{orderId}")
+    public ResponseEntity<FraudAnalysisResult> analyzeFraudRisk(@PathVariable Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        FraudAnalysisResult result = fraudDetectionService.analyzeFraudRisk(order, "paystack");
+        return ResponseEntity.ok(result);
+    }
+    
+    /**
+     * Get AI-powered payment recommendations
+     */
+    @GetMapping("/recommendations/{orderId}")
+    public ResponseEntity<PaymentRecommendation> getPaymentRecommendation(@PathVariable Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        
+        PaymentRecommendation recommendation = paymentRecommendationService.getPaymentRecommendation(order);
+        return ResponseEntity.ok(recommendation);
     }
     
     // ========== PAYMENT PROVIDER INTEGRATION (Provider-Agnostic) ==========

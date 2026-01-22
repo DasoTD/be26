@@ -39,6 +39,10 @@ spring:
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: ${RABBITMQ_VHOST:/}
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-test-key}
+      model: ${OPENAI_MODEL:gpt-3.5-turbo}
 
 jwt:
   secret: ${JWT_SECRET:6f61d7eab8c04c5c93d8e6f7d4b0a1c2f3e4d5c6b7a8091f2e3d4c5b6a7f8e9}
