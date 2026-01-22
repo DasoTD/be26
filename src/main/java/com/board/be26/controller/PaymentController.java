@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.board.be26.dto.PaymentRequest;
 import com.board.be26.dto.PaymentResponse;
+import com.board.be26.dto.PaystackInitializeResponse;
+import com.board.be26.entity.Payment;
 import com.board.be26.service.PaymentService;
 
 import jakarta.validation.Valid;
@@ -39,5 +42,63 @@ public class PaymentController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(response);
+    }
+    
+    // ========== PAYSTACK INTEGRATION ==========
+    
+    /**
+     * Initialize Paystack payment for an order
+     */
+    @PostMapping("/paystack/initialize/{orderId}")
+    public ResponseEntity<PaystackInitializeResponse> initializePaystackPayment(
+            @PathVariable Long orderId, 
+            Principal principal) {
+        PaystackInitializeResponse response = paymentService.initializePaymentPaystack(orderId);
+        return ResponseEntity.status(201).body(response);
+    }
+    
+    /**
+     * Verify Paystack payment
+     */
+    @PostMapping("/paystack/verify")
+    public ResponseEntity<Object> verifyPaystackPayment(@RequestParam String reference) {
+        try {
+            boolean verified = paymentService.verifyPaymentPaystack(reference);
+            if (verified) {
+                return ResponseEntity.ok(new PaymentStatusResponse(true, "Payment verified and completed"));
+            } else {
+                return ResponseEntity.ok(new PaymentStatusResponse(false, "Payment verification failed"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new PaymentStatusResponse(false, e.getMessage()));
+        }
+    }
+    
+    /**
+     * Get payment by reference
+     */
+    @GetMapping("/reference/{reference}")
+    public ResponseEntity<Payment> getPaymentByReference(@PathVariable String reference) {
+        Payment payment = paymentService.getPaymentByReference(reference);
+        return ResponseEntity.ok(payment);
+    }
+    
+    // Response wrapper class
+    public static class PaymentStatusResponse {
+        private boolean success;
+        private String message;
+        
+        public PaymentStatusResponse(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+        
+        public boolean isSuccess() {
+            return success;
+        }
+        
+        public String getMessage() {
+            return message;
+        }
     }
 }
