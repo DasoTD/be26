@@ -1,17 +1,20 @@
 package com.board.be26.dto;
 
+import java.util.List;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
+/**
+ * Request to create an order with multiple products
+ */
 public class CreateOrderRequest {
     @NotNull
     private Long userId;
 
-    @NotNull
-    private Long productId;
-
-    @Positive
-    private int quantity;
+    @NotEmpty(message = "At least one product must be specified")
+    @Valid
+    private List<OrderItemRequest> items;
 
     public Long getUserId() {
         return userId;
@@ -21,19 +24,11 @@ public class CreateOrderRequest {
         this.userId = userId;
     }
 
-    public Long getProductId() {
-        return productId;
+    public List<OrderItemRequest> getItems() {
+        return items;
     }
 
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setItems(List<OrderItemRequest> items) {
+        this.items = items;
     }
 }
