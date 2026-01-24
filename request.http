@@ -1,4 +1,4 @@
-@token=
+@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZTg3IiwiaWF0IjoxNzY5MTE4ODUzLCJleHAiOjE3NjkyMDUyNTN9.jJFuYpE-UAB08UVzjy240b5aF3gx4z19cYT88_q4KpvL6vSk97raCiLmE3-9ak8g
 
 POST http://localhost:8081/api/auth/register
 Content-Type: application/json
