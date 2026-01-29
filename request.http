@@ -1,4 +1,4 @@
-@token=eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJqb2huX2RvZTg3IiwiaWF0IjoxNzY4ODYzNTQ4LCJleHAiOjE3Njg5NDk5NDh9.62Hh9EZYt45XBv_egA6S9xsSmx-4ERbu6klPSj7Lp6oocOfUflwTFx_ZeOTkbL4i
+
 
 POST http://localhost:8081/api/auth/register
 Content-Type: application/json
@@ -12,6 +12,7 @@ Content-Type: application/json
 
 ###
 
+@name login
 POST http://localhost:8081/api/auth/login
 Content-Type: application/json
 
@@ -20,9 +21,8 @@ Content-Type: application/json
     "password": "securePassword87"
 }
 
-
-
-# ✅ Disables CSRF protection
+@token = {{login.response.body.token}}
+###
 # ✅ Disables CORS restrictions
 # ✅ Permits all requests to auth endpoints
 # ✅ Permits all other requests as wel
@@ -35,7 +35,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "sku": "SKU-002",
+    "sku": "SKU-0023",
     "name": "Sample Item",
     "description": "A thing to buy",
     "price": 19.99,
@@ -51,7 +51,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "orderId": 2,
+    "orderId": 12,
     "paymentMethod": "CARD",
     "providerReference": "demo-ref-123",
     "currency": "USD"
@@ -59,15 +59,24 @@ Authorization: Bearer {{token}}
 
 ###
 
-# Create an order (authenticated, owner-only)
+# Create an order with multiple products (authenticated, owner-only)
+# Updated format: orders can now contain multiple items
 POST http://localhost:8081/api/orders
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
     "userId": 8,
-    "productId": 1,
-    "quantity": 2
+    "items": [
+        {
+            "productId": 1,
+            "quantity": 2
+        },
+        {
+            "productId": 2,
+            "quantity": 1
+        }
+    ]
 }
 
 ###
@@ -85,6 +94,6 @@ Authorization: Bearer {{token}}
 ###
 
 # Get orders for a user (enforces ownership)
-GET http://localhost:8081/api/orders/user/1
+GET http://localhost:8081/api/orders/user/8
 Authorization: Bearer {{token}}
 

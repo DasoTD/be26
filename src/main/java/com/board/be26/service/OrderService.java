@@ -37,28 +37,55 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
-        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        Product product = productRepository.findById(request.getProductId()).orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        User user = userRepository.findById(request.getUserId())
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (request.getQuantity() <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
-        if (product.getStock() < request.getQuantity()) {
-            throw new IllegalStateException("Insufficient stock");
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("At least one product must be specified");
         }
 
-        product.setStock(product.getStock() - request.getQuantity());
-        productRepository.save(product);
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        int totalQuantity = 0;
+        Product firstProduct = null;
 
+        // Validate all products and calculate total
+        for (var item : request.getItems()) {
+            Product product = productRepository.findById(item.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + item.getProductId()));
+
+            if (item.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than zero");
+            }
+            if (product.getStock() < item.getQuantity()) {
+                throw new IllegalStateException("Insufficient stock for product: " + product.getName());
+            }
+
+            totalPrice = totalPrice.add(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            totalQuantity += item.getQuantity();
+            
+            if (firstProduct == null) {
+                firstProduct = product;
+            }
+        }
+
+        // Deduct stock for all products
+        for (var item : request.getItems()) {
+            Product product = productRepository.findById(item.getProductId()).orElseThrow();
+            product.setStock(product.getStock() - item.getQuantity());
+            productRepository.save(product);
+        }
+
+        // Create order (using first product as primary, with total quantity)
         Order order = new Order();
         order.setUser(user);
-        order.setProduct(product);
-        order.setQuantity(request.getQuantity());
-        order.setTotalPrice(product.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+        order.setProduct(firstProduct);
+        order.setQuantity(totalQuantity);
+        order.setTotalPrice(totalPrice);
         order.setStatus(OrderStatus.PENDING);
 
         Order saved = orderRepository.save(order);
-        logger.info("Created order {} for user {} and product {}", saved.getId(), user.getId(), product.getId());
+        logger.info("Created order {} for user {} with {} items, total price: {}", 
+            saved.getId(), user.getId(), request.getItems().size(), totalPrice);
         
         // Publish order created event to RabbitMQ queue
         OrderCreatedEvent event = new OrderCreatedEvent(
@@ -66,10 +93,10 @@ public class OrderService {
             user.getId(),
             user.getEmail(),
             user.getUsername(),
-            product.getName(),
-            request.getQuantity(),
-            product.getPrice(),
-            saved.getTotalPrice(),
+            firstProduct.getName() + (request.getItems().size() > 1 ? " + " + (request.getItems().size() - 1) + " more" : ""),
+            totalQuantity,
+            firstProduct.getPrice(),
+            totalPrice,
             saved.getStatus().toString(),
             System.currentTimeMillis()
         );
