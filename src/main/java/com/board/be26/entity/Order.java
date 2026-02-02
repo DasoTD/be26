@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
@@ -35,6 +36,12 @@ public class Order {
 
     private int quantity;
     private BigDecimal totalPrice;
+
+    @Column(length = 64)
+    private String couponCode;
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal discountAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -86,6 +93,22 @@ public class Order {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
     }
 
     public OrderStatus getStatus() {

@@ -16,6 +16,8 @@ public class CreateOrderRequest {
     @Valid
     private List<OrderItemRequest> items;
 
+    private String couponCode;
+
     public Long getUserId() {
         return userId;
     }
@@ -30,5 +32,13 @@ public class CreateOrderRequest {
 
     public void setItems(List<OrderItemRequest> items) {
         this.items = items;
+    }
+
+    public String getCouponCode() {
+        return couponCode;
+    }
+
+    public void setCouponCode(String couponCode) {
+        this.couponCode = couponCode;
     }
 }

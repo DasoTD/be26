@@ -26,13 +26,16 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderEventPublisher eventPublisher;
+    private final CouponService couponService;
 
     public OrderService(OrderRepository orderRepository, UserRepository userRepository, 
-                       ProductRepository productRepository, OrderEventPublisher eventPublisher) {
+                       ProductRepository productRepository, OrderEventPublisher eventPublisher,
+                       CouponService couponService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.eventPublisher = eventPublisher;
+        this.couponService = couponService;
     }
 
     @Transactional
@@ -75,12 +78,26 @@ public class OrderService {
             productRepository.save(product);
         }
 
+        // Apply coupon if provided
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        String couponCode = request.getCouponCode();
+        if (couponCode != null && !couponCode.trim().isEmpty()) {
+            CouponService.DiscountResult discountResult = couponService.applyCoupon(couponCode, totalPrice);
+            discountAmount = discountResult.getDiscountAmount();
+            totalPrice = discountResult.getFinalTotal();
+            couponCode = discountResult.getCoupon().getCode();
+        } else {
+            couponCode = null;
+        }
+
         // Create order (using first product as primary, with total quantity)
         Order order = new Order();
         order.setUser(user);
         order.setProduct(firstProduct);
         order.setQuantity(totalQuantity);
         order.setTotalPrice(totalPrice);
+        order.setCouponCode(couponCode);
+        order.setDiscountAmount(discountAmount);
         order.setStatus(OrderStatus.PENDING);
 
         Order saved = orderRepository.save(order);
